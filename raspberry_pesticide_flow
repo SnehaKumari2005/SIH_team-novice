@@ -1,0 +1,53 @@
+import tensorflow as tf
+from tensorflow.keras.preprocessing import image
+import numpy as np
+import time
+import cv2
+import RPi.GPIO as GPIO
+
+model_path = "/home/pi/infectionclassifier.h5"
+model = tf.keras.models.load_model(model_path)
+class_labels = ['Healthy', 'Moderately Healthy', 'Unhealthy']
+
+GPIO.setmode(GPIO.BCM)
+
+PUMP_PIN = 14 
+GPIO.setup(PUMP_PIN, GPIO.OUT)
+
+print("Opening USB camera...")
+cap = cv2.VideoCapture(0) 
+
+if not cap.isOpened():
+    print("Error: Could not access camera")
+    GPIO.cleanup()
+    exit()
+
+ret, frame = cap.read()
+cap.release()
+
+if not ret:
+    print("Error: Failed to capture image")
+    GPIO.cleanup()
+    exit()
+
+image_path = "/home/pi/captured_leaf.jpg"
+cv2.imwrite(image_path, frame)
+print(f"Image captured and saved at {image_path}")
+
+img = image.load_img(image_path, target_size=(256, 256))
+x = image.img_to_array(img)
+x = np.expand_dims(x, axis=0)
+x = x / 255.0  # normalize
+
+pred = model.predict(x)
+pred_index = np.argmax(pred)
+pred_label = class_labels[pred_index]
+print(f"Leaf Prediction: {pred_label}")
+
+print("Spraying pesticide for 3 seconds...")
+GPIO.output(PUMP_PIN, GPIO.HIGH)  # Relay ON
+time.sleep(3)
+GPIO.output(PUMP_PIN, GPIO.LOW)   # Relay OFF
+print("Spraying complete.")
+
+GPIO.cleanup()
