@@ -21,6 +21,5 @@ Data
 -unhealthy
 
 Acknowledgements:
-The core Python code for leaf health detection and automated spraying was generated with the help of ChatGPT by OpenAI.
-- TensorFlow, OpenCV, and RPi.GPIO libraries were used for machine learning, image processing, and hardware control.
+- TensorFlow, OpenCV, and RPi.GPIO libraries were used for machine learning, image processing, and hardware control
 
